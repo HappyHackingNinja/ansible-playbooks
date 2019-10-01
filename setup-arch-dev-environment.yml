@@ -1,0 +1,54 @@
+---
+- hosts: all
+  remote_user: "{{ vault_remote_user }}"
+  vars:
+    dev_packages:
+      - base-devel
+      - htop
+      - git
+      - openssl
+      - neofetch
+      - neovim
+      - p7zip
+      - pandoc
+      - python-pynvim
+      - ranger
+      - vim
+      - the_silver_searcher
+      - tig
+      - tldr
+      - tmux
+      - unzip
+      - zip
+      - zsh
+
+  tasks:
+    - name: Test connectivity
+      ping:
+
+    - name: Run the equivalent of "pacman -Syu" as a separate step
+      pacman:
+        update_cache: yes
+        upgrade: yes
+      register: upgrade_packages_results
+      become: yes
+
+    - name: Print upgraded packages
+      debug:
+        msg: "{{ upgrade_packages_results }}"
+
+    - name: Install packages for development
+      pacman:
+        name: "{{ dev_packages }}"
+        state: present
+      become: yes
+
+    - name: Check SpaceVim folder exist
+      stat:
+        path: ~/.SpaceVim
+      register: check_spacevim_exist
+
+    - name: Install SpaceVim if not installed
+      shell: |
+        curl -sLf https://spacevim.org/install.sh | bash
+      when: not check_spacevim_exist.stat.exists

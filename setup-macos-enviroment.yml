@@ -1,0 +1,102 @@
+---
+- name: Install MacOS Packages
+  hosts: localhost
+  vars:
+    brew_packages:
+      - bash-completion
+      - curl
+      - emacs-plus
+      - htop
+      - httpie
+      - git
+      - git-lfs
+      - graphviz
+      - gradle
+      - go
+      - jq
+      - mosh
+      - maven
+      - neofetch
+      - neovim
+      - node
+      - nvm
+      - nmap
+      - openssl
+      - pandoc
+      - pyenv
+      - python
+      - ranger
+      - tig
+      - tldr
+      - tmux
+      - tree
+      - wget
+      - zsh
+      - zsh-syntax-highlighting
+    brew_cask_packages:
+      - alfred
+      - android-platform-tools
+      - balsamiq-mockups
+      - calibre
+      - cmdtap
+      - docker
+      - dropbox
+      - duet
+      - firefox-developer-edition
+      - font-iosevka-nerd-font
+      - google-chrome-dev
+      - iterm2-beta
+      - jetbrains-toolbox
+      - lastpass
+      - onedrive
+      - pdf-expert
+      - pocket-casts
+      - pomodone
+      - postman
+      - scroll-reverser
+      - setapp
+      - sourcetree-beta
+      - spotify
+      - telegram-desktop
+      - typora
+      - virtualbox
+      - virtualbox-extension-pack
+      - visual-studio-code
+
+    upgrade_homebrew_packages: false
+
+  pre_tasks:
+    - name: Check if Homebrew is already installed
+      stat:
+        path: /usr/local/bin/brew
+      register: check_homebrew_result
+
+    - name: Install Homebrew if not installed
+      command: |
+        /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+      when: not check_homebrew_result.stat.exists
+
+  tasks:
+    - name: Tap Homebrew repositories
+      homebrew_tap:
+        name: d12frosted/emacs-plus,homebrew/cask-fonts,homebrew/cask-versions
+        state: present
+      when: check_homebrew_result.stat.exists
+
+    - name: Fetch the newest version of Homebrew and all formulae 
+      homebrew:
+        update_homebrew: true
+      when: check_homebrew_result.stat.exists
+
+    - name: Install Homebrew packages
+      homebrew:
+        name: "{{ brew_packages }}"
+        state: present
+        upgrade_all: "{{ upgrade_homebrew_packages }}"
+      when: check_homebrew_result.stat.exists
+
+    - name: Install Homebrew Cask packages
+      homebrew_cask:
+        name: "{{ brew_cask_packages }}"
+        state: present
+      when: check_homebrew_result.stat.exists
