@@ -1,0 +1,43 @@
+jenkins:
+  clouds:
+    - docker:
+        name: 'docker'
+        dockerApi:
+          dockerHost:
+            uri: 'unix:///var/run/docker.sock'
+  labelString: 'master docker'
+  numExecutors: 2
+  mode: 'EXCLUSIVE'
+  systemMessage: 'Jenkins CI with Docker'
+unclassified:
+  # Extended E-mail Notification
+  extendedEmailPublisher:
+    allowUnregisteredEnabled: true
+    charset: 'UTF-8'
+    defaultSuffix: '@cht.com.tw'
+    precedenceBulk: true
+    smtpPort: 25
+    smtpServer: 'webmail.cht.com.tw'
+  # Git plugin
+  gitscm:
+    globalConfigName: 'jenkins'
+    globalConfigEmail: 'jenkins@cht.com.tw'
+    createAccountBasedOnEmail: true
+  # Jenkins Location
+  location:
+    adminAddress: 'Kehao Chen <k@cht.com.tw>'
+    url: 'http://localhost:8080/'
+  # E-mail Notification
+  mailer:
+    adminAddress: 'k@cht.com.tw'
+    replyToAddress: 'k@cht.com.tw'
+    smtpHost: 'webmail.cht.com.tw'
+    smtpPort: 25
+    charset: 'UTF-8'
+    useSsl: false
+  # Pipeline Model Definition
+  pipeline-model:
+    dockerLabel: 'docker'
+  # Timestamper
+  timestamperConfig:
+    allPipelines: true

@@ -1,0 +1,31 @@
+#### Organization and Administration
+# Configuration as Code
+# To configure Jenkins based on human-readable declarative configuration files.
+# https://plugins.jenkins.io/configuration-as-code
+configuration-as-code:latest
+
+
+#### Build Tools
+# Docker
+# Allows to use a docker host to dynamically provision build agents, run a single build, then tear-down agent.
+# https://plugins.jenkins.io/docker-plugin
+docker-plugin:latest
+
+
+#### Build Analysis and Reporting
+# Warnings Next Generation
+# Collects compiler warnings or issues reported by static analysis tools and visualizes the results.
+# https://plugins.jenkins.io/warnings-ng
+warnings-ng:latest
+
+
+#### Pipelines and Continuous Delivery
+# Job DSL
+# Allows the programmatic creation of projects using a DSL
+# https://plugins.jenkins.io/job-dsl
+job-dsl:latest
+
+# Blue Ocean
+# Designed from the ground up for Jenkins Pipeline, but still compatible with freestyle jobs.
+# https://plugins.jenkins.io/blueocean
+blueocean:latest
