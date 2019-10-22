@@ -5,7 +5,8 @@ ARG docker_group=docker
 ARG docker_gid=993
 
 USER root
-RUN groupadd -g ${docker_gid} ${docker_group} \
+RUN apk add --no-cache shadow
+RUN groupmod -g ${docker_gid} ${docker_group} \
   && usermod -a -G ${docker_group} ${user}
 
 USER ${user}
