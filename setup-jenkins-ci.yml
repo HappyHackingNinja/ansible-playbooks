@@ -2,21 +2,23 @@
 - hosts: do_jenkins
 
   tasks:
+    - name: Download docker compose
+      get_url:
+        url: https://github.com/docker/compose/releases/download/1.24.1/docker-compose-Linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: '711'
     - name: Test connectivity
       ping:
-
-    - name: Get GID of docker
-      getent:
-        database: group
-        key: docker
-    
-    - debug:
-        var: getent_group.docker[1]
 
     - name: Upgrade all packages
       yum:
         name: '*'
         state: latest
+
+    - name: Enabling the EPEL repo
+      yum:
+        name:
+          - epel-release
 
     - name: Install required packages for Docker
       yum:
@@ -39,52 +41,50 @@
       service:
         name: docker
         state: started
+    
+    - name: Get GID of docker
+      getent:
+        database: group
+        key: docker
+    
+    - debug:
+        var: getent_group.docker[1]
 
-    - name: Install required packages for Jenkins
+    - name: Install Python PIP
       yum:
         name:
-          - git
-          - java-1.8.0-openjdk-devel
+          - python-pip
 
-    - name: Add Jenkins repository
-      shell: yum-config-manager --add-repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+    - name: Install Docker SDK for Python
+      pip:
+        name: docker
 
-    - name: Import key for Jenkins repository
-      rpm_key:
-        state: present
-        key: https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+    - name: Copy files of jenkins on the control node to the tmp on the remote hosts
+      copy:
+        src: jenkins
+        dest: /tmp
+    
+    - name: Build the Jenkins CI image
+      docker_image:
+        name: my-jenkins
+        build:
+          path: /tmp/jenkins
+          args:
+            docker_gid: "{{ getent_group.docker[1] }}"
+          pull: yes
+        source: build
 
-    - name: Install Jenkins
-      yum:
-        name:
-          - jenkins
-
-    - name: Appending the group 'docker' to the jenkins user's groups
-      user:
+    - name: Jenkins container
+      docker:
         name: jenkins
-        group: docker
-        append: yes
+        image: my-jenkins
+        state: started
+        expose:
+          - 8080
+          - 50000
+        volume:
+          - 'jenkins_home:/var/jenkins_home'
+          - './casc_configs:/var/jenkins_home/casc_configs'
+          - '/var/run/docker.sock:/var/run/docker.sock'
 
-    - name: Start service Jenkins, if not started
-      service:
-        name: jenkins
-        state: restarted
 
-    - name: Wait for port 8000 to become open on the host, don't start checking for 10 seconds
-      wait_for:
-        port: 8080
-        delay: 10
-
-    - stat:
-        path: /var/lib/jenkins/secrets/initialAdminPassword
-      register: jenkins_default_password_file_status
-
-    - name: Get the default password of Jenkins
-      shell: cat /var/lib/jenkins/secrets/initialAdminPassword
-      register: jenkins_default_password_results
-      when: jenkins_default_password_file_status.stat.exists
-
-    - name: Print Jenkins default password
-      debug:
-        msg: "{{ jenkins_default_password_results.stdout }}"
-      when: jenkins_default_password_file_status.stat.exists
