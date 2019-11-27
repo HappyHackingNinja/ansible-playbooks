@@ -1,0 +1,94 @@
+---
+- hosts: do_jenkins
+  vars:
+    upgrade_all_packages: false
+
+  tasks:
+    - name: Test connectivity
+      ping:
+
+    - name: Upgrade all packages
+      yum:
+        name: '*'
+        state: latest
+      when: upgrade_all_packages
+
+    - name: Enabling the EPEL repo
+      yum:
+        name:
+          - epel-release
+
+    - name: Install required packages for Docker
+      yum:
+        name:
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+
+    - name: Add Docker CE repository
+      yum_repository:
+        name: docker-ce-stable
+        description: Docker CE Stable - $basearch
+        baseurl: https://download.docker.com/linux/centos/7/$basearch/stable
+        gpgkey: https://download.docker.com/linux/centos/gpg
+        gpgcheck: yes
+
+    - name: Install Docker CE
+      yum:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+
+    - name: Start service Docker, if not started
+      service:
+        enabled: yes
+        name: docker
+        state: started
+    
+    - name: Get GID of docker
+      getent:
+        database: group
+        key: docker
+    
+    - debug:
+        var: getent_group.docker[1]
+
+    - name: Install Python PIP
+      yum:
+        name:
+          - python-pip
+
+    - name: Install Docker SDK for Python
+      pip:
+        name:
+          - docker >= 1.8.0
+          - PyYAML >= 3.11
+          - docker-compose >= 1.7.0
+
+    - name: Copy files of jenkins on the control node to the tmp on the remote hosts
+      copy:
+        src: jenkins
+        dest: /tmp
+    
+    - name: Build the Jenkins CI image
+      docker_image:
+        name: my-jenkins
+        build:
+          path: /tmp/jenkins
+          args:
+            docker_gid: "{{ getent_group.docker[1] }}"
+          pull: yes
+        force_source: yes
+        source: build
+
+    - name: Create and start services
+      docker_compose:
+        project_src: /tmp/jenkins
+        restarted: yes
+      register: jenkins_output
+
+    - debug:
+        var: jenkins_output
+
+
