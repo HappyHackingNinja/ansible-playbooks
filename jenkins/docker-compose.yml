@@ -1,0 +1,26 @@
+version: '3.6'
+
+services:
+  jenkins:
+    container_name: 'my-jenkins'
+    restart: always
+    image: my-jenkins
+
+    hostname: 'do-jenkins.happyhacking.ninja'
+    ports:
+      - '8080:8080'
+      # JNLP TCP port
+      - '50000:50000'
+    environment:
+      JENKINS_USER: 'k'
+      JENKINS_PASS: '!Passw0rd'
+      CASC_JENKINS_CONFIG: '/var/jenkins_home/casc_configs'
+    volumes:
+      - 'jenkins_home:/var/jenkins_home'
+      - './casc_configs:/var/jenkins_home/casc_configs'
+      - '/var/run/docker.sock:/var/run/docker.sock'
+
+volumes:
+  jenkins_home:
+    name: 'jenkins_home'
+    driver: local
